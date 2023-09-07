@@ -446,6 +446,70 @@ public class Boj12015 {
 
 수열에서 증가하는 부분수열의 합 중 가장 큰 것을 구해야 한다.
 
+일반적으로 증가부분 수열을 N^2으로 구하는 방법에서 살짝 응용이 들어간 문제이다.
+
+우리가 N^2 의 방식을 할 수 있는지 먼저 파악해야한다.
+
+```java
+// dp 배열의 사용도를 정의한다.
+// 가장 큰 증가하는 부분수열은 즉, 증가부분수열이면서 새 원소가 들어올 때
+// 최대가 될 때만 부분수열에 포함시켜야 한다.
+// 그러기 위해서는 모든 원래 N^2의 증가부분수열을 구하는 방법에서 모든 dp값을 1로 초기화했던것 처럼
+// 자기 자신의 원소값을 저장 한다.
+// 왜냐하면 원소를 증가부분수열에 포함 할지 말지를 결정하는데 있어서 있다.
+// 어떤 원소를 이제 큰 증가부분수열에 포함시켜야 할 때
+// 해당 원소보다 작은 인덱스에서의 부분수열을 형성한 합들 중
+// 자기네들 부분수열에 포함시킨것이 이득인 애들을 갱신해야 한다.
+ 
+import java.util.*;
+import java.io.*;
+
+public class Main {
+	static long [] arr;
+	static long [] dp;
+	static int N;
+	static int [] v;
+	static long max;
+	static StringTokenizer stk;
+	public static void main(String[] args) throws Exception{
+		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+		max = Long.MIN_VALUE;
+		N = Integer.parseInt(bf.readLine());
+		stk = new StringTokenizer(bf.readLine());
+		arr = new long[N];
+		dp = new long[N];
+		v = new int[N];
+		for(int i= 0;i<N;i++) {
+			long value = Long.parseLong(stk.nextToken());
+			arr[i] = value;
+			dp[i] = arr[i];
+		}
+		// LIS
+		max = dp[0];
+		//
+		/*
+		 * 0  1  2  3  4  5  6  7
+		 * 1  9  3  6  6  7  2  4
+		 * 1 10  4 10 10 17    
+		 * 0  1  1  2  2  3  1  2
+		 */
+		
+		for(int i=1;i<N;i++) {
+			for(int j = 0;j<i;j++) {
+				if(arr[j] < arr[i]) {
+					dp[i] = Math.max(dp[j]+arr[i], dp[i]);
+					max = Math.max(max, dp[i]);
+				}
+			}
+		}
+		System.out.println(max);
+
+	}
+
+}
+
+```
+
 출처 : 
 
 [[Java]동적 계획법(Dynamic Programming)](https://sskl660.tistory.com/87)
