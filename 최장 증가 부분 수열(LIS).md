@@ -288,34 +288,159 @@ DP
 ```이분탐색```을 통해 빠르게 접근이 가능하다.
 
 ```java
-class Main{
-    static int [] arr;
-    static int [] dp;
-    public static void main(String []args){
-        arr = new int[]{4,2,3,1,5,6};
-        dp = new int[arr.length];
-        int LIS = 0;
-        for(int i= 0;i<arr.length;i++){
-            int idx= LowerBoundBinarySearch(arr[i], 0, LIS);
-            dp[idx] = arr[i];
-            if(idx == LIS){
-                LIS++;
-            }
-        }
-        System.out.println(LIS);
-    }
-    static int LowerBoundBinarySearch(int find, int start, int end){
-        while(start< end){
-            int mid = (end+start)/2;
-            if(dp[mid]<find){
-                start = mid+1;
+import java.util.*;
+import java.io.*;
+
+public class Main {
+	static int N;
+	static int [] arr;
+	static StringTokenizer stk;
+	public static void main(String[] args) throws Exception{
+		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+		N = Integer.parseInt(bf.readLine());
+		arr = new int[N];
+		stk = new StringTokenizer(bf.readLine());
+		for(int i= 0;i<N;i++) {
+			arr[i] = Integer.parseInt(stk.nextToken());
+		}
+		int [] dp = new int[N+1];
+		dp[0] = arr[0];
+		
+		int LIS = 0;
+		for(int i= 1;i<N;i++) {
+            // 무조건 lower을 검사하는 것이 아니다.
+            // 이미 LIS-1번째 원소보다 arr의 i번째가 더 크다면 그냥 안찾고 뒤에 붙이면 된다.
+            if(dp[LIS] < arr[i]){
+                dp[++LIS] = arr[i];
             }else{
-                end = mid;
+                int idx = lower(dp,0,LIS, arr[i]);    
+                dp[idx] = arr[i];
             }
-        }
-        return end;    
-    }
-}   
+		}
+//		System.out.println(Arrays.toString(dp));
+		System.out.println(LIS+1);
+	}
+	static int lower(int [] arr, int start, int end, int find) {
+		while(start < end) {
+			int mid = (end+start)/2;
+			if(arr[mid] < find) {
+				start = mid+1;
+			}else {
+				end = mid;
+			}
+		}
+		return end;
+	}
+
+}
+ 
+```
+### LIS의 원소까지 찾아야 할 때
+
+만약 본인이 nlogn 방식으로 최장 증가부분 수열을 구했다면 길이는 문제가 되지 않지만
+
+dp배열을 출력하면 이상한 값이 나오게 된다.
+```
+input : 
+4
+1 4 5 3
+```
+```
+output :
+1 3 5
+
+answer :
+1 4 5
+```
+왜냐하면 이분탐색을 통해 계속 위치를 강제로 바꾸기 때문에 증가부분수열을 이루는것을 항상 보장하지 못한다.
+
+그래서 증가부분수열을 구하는 dp배열에서 끝나는 것이 아니라
+
+추가적인 배열이 필요하게 된다.
+
+해당 배열은 원본 배열의 원소 인덱스를 기준으로 증가부분 수열을 이루었을 때의 인덱스를 담아야 한다.
+
+결국 해당 배열은 증가부분수열에서의 위치 후보가 담기게 되는데
+
+그렇다고 해서 앞에서부터 증가부분수열에 포함시키게 된다면 반례가 위의 상황과 비슷하게 터질 수 있다.
+
+따라서 뒤에서 부터 즉, 증가부분수열이 크기가 4일 때 3번째 증가부분수열 원소부터 찾아 나서고
+
+스택에 넣어놓고 하나씩 다 빼면 된다.
+
+```java
+import java.util.*;
+import java.io.*;
+
+public class Boj12015 {
+	static int [] arr;
+	static int [] v;
+	static int N;
+	static StringTokenizer stk;
+	public static void main(String[] args) throws Exception{
+		BufferedReader bf = new BufferedReader(new InputStreamReader(System.in));
+		N = Integer.parseInt(bf.readLine());
+		arr = new int[N];
+		int []  dp = new int[N+1];
+		stk = new StringTokenizer(bf.readLine());
+		for(int i= 0;i<N;i++) {
+			arr[i] = Integer.parseInt(stk.nextToken());
+		}
+		dp[0] = arr[0];
+		
+		v = new int[N];
+		v[0] = 0;
+		int LIS = 0;
+		for(int i= 1;i<N;i++) {
+			if(dp[LIS] < arr[i]) {
+				// 현재 dp 마지막번째보다 크다면 그냥 뒤에 붙이면된다.
+				dp[++LIS] = arr[i];
+				v[i] = LIS;
+			}
+			else {
+				int idx = lower(dp, 0, LIS, arr[i]);
+				v[i] = idx;
+				dp[idx] = arr[i];
+			}
+			
+		}
+		
+		
+//		System.out.println(Arrays.toString(dp));
+//		System.out.println(Arrays.toString(v));
+		Stack<Integer> res = new Stack<>();
+		// 뒤에서 부터 꺼내야 반례가 없게된다.
+		// 현재 v배열에는 각 원소의 증가부분수열에서의 인덱스가 담겨있다.
+		// 뒤에서부터 꺼내어서 stack에 담으면 3번째 2번째 1번째 0번째로 들어가고
+		// stack에서 isEmpty까지 pop하여 꺼내면 증가부분수열이 된다.
+		int t = LIS;
+		for(int i= arr.length-1 ;i>-1;i--) {
+			if(t == v[i]) {
+				res.add(arr[i]);
+				--t;
+			}
+		}
+		System.out.println(LIS+1);
+		while(!res.isEmpty()) {
+			System.out.print(res.pop()+" ");
+		}
+		
+		
+	}
+	static int lower(int [] arr, int start, int end, int find) {
+		while(start < end) {
+			int mid = (start+end)/2;
+			if(arr[mid] < find) {
+				start = mid+1;
+			}else {
+				end = mid;
+			}
+		}
+		return end;
+	}
+
+}
+
 ```
 
 출처 : 
